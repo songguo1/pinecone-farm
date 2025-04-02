@@ -52,7 +52,11 @@ spring:
     # 国际化资源文件路径
     basename: i18n/messages
   profiles:
+<<<<<<< HEAD
     active: dev
+=======
+    active: druid
+>>>>>>> 446004b3d3b70b5ee168bac7c918b9e27dd9898d
   # 文件上传
   servlet:
     multipart:
@@ -138,9 +142,18 @@ dromara:
     aliyun-oss:
       - platform: aliyun-oss-1 # 存储平台标识
         enable-storage: true  # 启用存储
+<<<<<<< HEAD
         access-key: ${aliyun.access-key}
         secret-key: ${aliyun.secret-key}
         end-point: ${aliyun.end-point}
         bucket-name: ${aliyun.bucket-name}
         domain: ${aliyun.domain}  # 访问域名，注意“/”结尾
         base-path: ${aliyun.base-path}  # 基础路径
+=======
+        access-key:
+        secret-key:
+        end-point:
+        bucket-name:
+        domain:  # 访问域名，注意“/”结尾，例如：https://abc.oss-cn-shanghai.aliyuncs.com/
+        base-path:  # 基础路径
+>>>>>>> 446004b3d3b70b5ee168bac7c918b9e27dd9898d

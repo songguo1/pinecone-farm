@@ -45,5 +45,8 @@ nbdist/
 !*/build/*.java
 !*/build/*.html
 !*/build/*.xml
+<<<<<<< HEAD
 
 **/application-dev.yml
+=======
+>>>>>>> 446004b3d3b70b5ee168bac7c918b9e27dd9898d
