@@ -1,0 +1,290 @@
+<template>
+  <div class="add-device-container">
+    <el-card class="form-card">
+      <template #header>
+        <div class="card-header">
+          <span>新增气象站</span>
+        </div>
+      </template>
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        size="default"
+        label-width="120px"
+      >
+        <el-form-item label="气象站名称" prop="stationName">
+          <el-input
+            v-model="form.stationName"
+            type="text"
+            placeholder="请输入气象站名称"
+            clearable
+            :style="{ width: '100%' }"
+          ></el-input>
+        </el-form-item>
+
+        <el-form-item label="气象站状态" prop="status">
+          <el-select
+            v-model="form.status"
+            placeholder="请选择气象站状态"
+            clearable
+            :style="{ width: '100%' }"
+          >
+            <el-option
+              v-for="dict in device_status"
+              :key="dict.value"
+              :label="dict.label"
+              :value="parseInt(dict.value)"
+            ></el-option>
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="图标" prop="icon">
+          <image-upload v-model="form.icon" />
+        </el-form-item>
+
+        <el-form-item label="设备图片" prop="deviceImage">
+          <image-upload v-model="form.deviceImage" />
+        </el-form-item>
+
+        <el-form-item label="备注信息" prop="remarks">
+          <el-input
+            v-model="form.remarks"
+            type="textarea"
+            placeholder="请输入备注信息"
+            :autosize="{ minRows: 4, maxRows: 4 }"
+            :style="{ width: '100%' }"
+          ></el-input>
+        </el-form-item>
+
+        <el-form-item label="最后更新时间" prop="lastUpdate">
+          <el-date-picker
+            v-model="form.lastUpdate"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+            :style="{ width: '100%' }"
+            placeholder="请选择最后一次数据更新时间"
+            clearable
+          ></el-date-picker>
+        </el-form-item>
+
+        <el-form-item>
+          <el-button type="primary" @click="submitForm">提交</el-button>
+          <el-button @click="resetForm">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
+    <el-card class="map-card">
+      <template #header>
+        <div class="card-header">
+          <span>气象站位置</span>
+        </div>
+      </template>
+      <div class="map-container">
+        <Map @get-wkt="getWkt" type="Point"></Map>
+      </div>
+    </el-card>
+  </div>
+</template>
+
+<script setup>
+import { ElMessage } from "element-plus";
+import Map from "@/components/map/index.vue";
+import {
+  listWeather,
+  getWeather,
+  delWeather,
+  addWeather,
+  updateWeather,
+} from "@/api/devices/weather";
+
+import { ref, reactive, onMounted } from "vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+const formRef = ref();
+
+const data = reactive({
+  form: {
+    stationName: undefined,
+    status: undefined,
+    icon: null,
+    deviceImage: null,
+    remarks: undefined,
+    lastUpdate: null,
+  },
+  rules: {
+    stationName: [
+      { required: true, message: "请输入气象站名称", trigger: "blur" },
+      { min: 2, max: 50, message: "长度在 2 到 50 个字符", trigger: "blur" },
+    ],
+    status: [
+      { required: true, message: "请选择气象站状态", trigger: "change" },
+    ],
+    icon: [{ required: true, message: "请上传设备图标", trigger: "change" }],
+    deviceImage: [
+      { required: true, message: "请上传设备图片", trigger: "change" },
+    ],
+    remarks: [
+      { required: true, message: "请输入备注信息", trigger: "blur" },
+      { min: 5, max: 200, message: "长度在 5 到 200 个字符", trigger: "blur" },
+    ],
+    lastUpdate: [
+      {
+        required: true,
+        message: "请选择最后一次数据更新时间",
+        trigger: "change",
+      },
+    ],
+    location: [
+      {
+        required: true,
+        message: "请在地图上选择气象站位置",
+        trigger: "change",
+      },
+    ],
+  },
+});
+
+const { proxy } = getCurrentInstance();
+const { device_status } = proxy.useDict("device_status");
+const { form, rules } = toRefs(data);
+
+const getWkt = (wkt) => {
+  form.value.location = wkt;
+};
+
+// 表单重置
+const reset = () => {
+  form.value.weatherStationId = null;
+  form.value.stationName = null;
+  form.value.status = null;
+  form.value.icon = null;
+  form.value.deviceImage = null;
+  form.value.remarks = null;
+  form.value.lastUpdate = null;
+  formRef.value?.resetFields();
+};
+
+const resetForm = () => {
+  reset();
+};
+
+const submitForm = () => {
+  formRef.value?.validate(async (valid) => {
+    if (valid) {
+      try {
+        if (form.value.weatherStationId != null) {
+          await updateWeather(form.value);
+          ElMessage.success("修改成功");
+        } else {
+          console.log(form.value);
+          await addWeather(form.value);
+
+          ElMessage.success("新增成功");
+        }
+        router.push("/devices/weather");
+      } catch (error) {
+        console.error("提交失败", error);
+      }
+    }
+  });
+};
+</script>
+
+<style lang="scss" scoped>
+.add-device-container {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  height: calc(100vh - 100px);
+  background-color: #f5f7fa;
+
+  .form-card,
+  .map-card {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    :deep(.el-card__body) {
+      flex: 1;
+      overflow: auto;
+      padding: 20px;
+    }
+  }
+
+  .card-header {
+    font-size: 16px;
+    font-weight: bold;
+  }
+
+  .map-container {
+    height: 100%;
+    min-height: 400px;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  :deep(.el-form-item) {
+    margin-bottom: 22px;
+
+    .el-form-item__label {
+      font-weight: 500;
+    }
+
+    &.is-required .el-form-item__label:before {
+      color: #ff4949;
+    }
+  }
+
+  :deep(.el-input),
+  :deep(.el-select),
+  :deep(.el-date-picker) {
+    .el-input__wrapper {
+      box-shadow: 0 0 0 1px #dcdfe6 inset;
+
+      &:hover {
+        box-shadow: 0 0 0 1px #c0c4cc inset;
+      }
+
+      &.is-focus {
+        box-shadow: 0 0 0 1px #409eff inset;
+      }
+    }
+  }
+
+  :deep(.el-textarea__inner) {
+    box-shadow: 0 0 0 1px #dcdfe6 inset;
+
+    &:hover {
+      box-shadow: 0 0 0 1px #c0c4cc inset;
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 1px #409eff inset;
+    }
+  }
+
+  :deep(.image-upload-container) {
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    padding: 10px;
+
+    &:hover {
+      border-color: #409eff;
+    }
+  }
+
+  .el-button {
+    padding: 12px 20px;
+    min-width: 100px;
+    margin-right: 12px;
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+}
+</style>
