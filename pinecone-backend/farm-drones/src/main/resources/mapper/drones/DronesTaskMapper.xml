@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.farm.drones.mapper.DronesTaskMapper">
+    
+    <resultMap type="DronesTask" id="DronesTaskResult">
+        <result property="id"    column="id"    />
+        <result property="taskName"    column="task_name"    />
+        <result property="taskType"    column="task_type"    />
+        <result property="taskDate"    column="task_date"    />
+        <result property="droneId"    column="drone_id"    />
+        <result property="pilotId"    column="pilot_id"    />
+        <result property="dronesHeight"    column="drones_height"    />
+        <result property="dronesPath"    column="drones_path"    />
+        <result property="createdTime"    column="created_time"    />
+        <result property="updatedTime"    column="updated_time"    />
+    </resultMap>
+
+    <sql id="selectDronesTaskVo">
+        select id, task_name, task_type, task_date, drone_id, pilot_id, drones_height, ST_AsText(drones_path) as drones_path, created_time, updated_time from agri_drones_task
+    </sql>
+
+    <select id="selectDronesTaskList" parameterType="DronesTask" resultMap="DronesTaskResult">
+        <include refid="selectDronesTaskVo"/>
+        <where>  
+            <if test="taskName != null  and taskName != ''"> and task_name like concat(concat('%', #{taskName}), '%')</if>
+            <if test="taskType != null  and taskType != ''"> and task_type = #{taskType}</if>
+            <if test="taskDate != null "> and task_date = #{taskDate}</if>
+            <if test="droneId != null "> and drone_id = #{droneId}</if>
+            <if test="pilotId != null "> and pilot_id = #{pilotId}</if>
+            <if test="dronesHeight != null "> and drones_height = #{dronesHeight}</if>
+        </where>
+    </select>
+    
+    <select id="selectDronesTaskById" parameterType="Long" resultMap="DronesTaskResult">
+        <include refid="selectDronesTaskVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertDronesTask" parameterType="DronesTask" useGeneratedKeys="true" keyProperty="id">
+        insert into agri_drones_task
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="taskName != null">task_name,</if>
+            <if test="taskType != null">task_type,</if>
+            <if test="taskDate != null">task_date,</if>
+            <if test="droneId != null">drone_id,</if>
+            <if test="pilotId != null">pilot_id,</if>
+            <if test="dronesHeight != null">drones_height,</if>
+            <if test="dronesPath != null">drones_path,</if>
+            <if test="createdTime != null">created_time,</if>
+            <if test="updatedTime != null">updated_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="taskName != null">#{taskName},</if>
+            <if test="taskType != null">#{taskType},</if>
+            <if test="taskDate != null">#{taskDate},</if>
+            <if test="droneId != null">#{droneId},</if>
+            <if test="pilotId != null">#{pilotId},</if>
+            <if test="dronesHeight != null">#{dronesHeight},</if>
+            <if test="dronesPath != null">ST_GeomFromText(#{dronesPath}, 4326),</if>
+            <if test="createdTime != null">#{createdTime},</if>
+            <if test="updatedTime != null">#{updatedTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDronesTask" parameterType="DronesTask">
+        update agri_drones_task
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="taskName != null">task_name = #{taskName},</if>
+            <if test="taskType != null">task_type = #{taskType},</if>
+            <if test="taskDate != null">task_date = #{taskDate},</if>
+            <if test="droneId != null">drone_id = #{droneId},</if>
+            <if test="pilotId != null">pilot_id = #{pilotId},</if>
+            <if test="dronesHeight != null">drones_height = #{dronesHeight},</if>
+            <if test="dronesPath != null">drones_path = ST_GeomFromText(#{dronesPath}, 4326),</if>
+            <if test="createdTime != null">created_time = #{createdTime},</if>
+            <if test="updatedTime != null">updated_time = #{updatedTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteDronesTaskById" parameterType="Long">
+        delete from agri_drones_task where id = #{id}
+    </delete>
+
+    <delete id="deleteDronesTaskByIds" parameterType="String">
+        delete from agri_drones_task where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

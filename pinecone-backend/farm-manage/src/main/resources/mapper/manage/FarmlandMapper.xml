@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.farm.manage.mapper.FarmlandMapper">
+    
+    <resultMap type="Farmland" id="FarmlandResult">
+        <result property="landId"    column="land_id"    />
+        <result property="landName"    column="land_name"    />
+        <result property="soilType"    column="soil_type"    />
+        <result property="cropsType"    column="crops_type"    />
+        <result property="irrigationType"    column="irrigation_type"    />
+        <result property="status"    column="status"    />
+        <result property="geom"    column="geom"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectFarmlandVo">
+        select land_id, land_name, soil_type, crops_type, irrigation_type, status, ST_AsText(geom) as geom, create_time, update_time, create_by, update_by, remark from agri_farmland
+    </sql>
+
+    <select id="selectFarmlandList" parameterType="Farmland" resultMap="FarmlandResult">
+        <include refid="selectFarmlandVo"/>
+        <where>  
+            <if test="landName != null  and landName != ''"> and land_name like concat(concat('%', #{landName}), '%')</if>
+            <if test="soilType != null  and soilType != ''"> and soil_type = #{soilType}</if>
+            <if test="cropsType != null  and cropsType != ''"> and crops_type = #{cropsType}</if>
+            <if test="irrigationType != null  and irrigationType != ''"> and irrigation_type = #{irrigationType}</if>
+        </where>
+    </select>
+
+    <select id="getAllFarmland" resultMap="FarmlandResult">
+        <include refid="selectFarmlandVo"/>
+    </select>
+    
+    <select id="selectFarmlandByLandId" parameterType="Long" resultMap="FarmlandResult">
+        <include refid="selectFarmlandVo"/>
+        where land_id = #{landId}
+    </select>
+        
+    <insert id="insertFarmland" parameterType="Farmland" useGeneratedKeys="true" keyProperty="landId">
+        insert into agri_farmland
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="landName != null and landName != ''">land_name,</if>
+            <if test="soilType != null">soil_type,</if>
+            <if test="cropsType != null">crops_type,</if>
+            <if test="irrigationType != null">irrigation_type,</if>
+            <if test="status != null">status,</if>
+            <if test="geom != null">geom,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="landName != null and landName != ''">#{landName},</if>
+            <if test="soilType != null">#{soilType},</if>
+            <if test="cropsType != null">#{cropsType},</if>
+            <if test="irrigationType != null">#{irrigationType},</if>
+            <if test="status != null">#{status},</if>
+            <if test="geom != null">ST_GeomFromText(#{geom}, 4326),</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFarmland" parameterType="Farmland">
+        update agri_farmland
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="landName != null and landName != ''">land_name = #{landName},</if>
+            <if test="soilType != null">soil_type = #{soilType},</if>
+            <if test="cropsType != null">crops_type = #{cropsType},</if>
+            <if test="irrigationType != null">irrigation_type = #{irrigationType},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="geom != null">geom = ST_GeomFromText(#{geom}, 4326),</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="remark != null and remark != ''">remark = #{remark},</if>
+        </trim>
+        where land_id = #{landId}
+    </update>
+
+    <delete id="deleteFarmlandByLandId" parameterType="Long">
+        delete from agri_farmland where land_id = #{landId}
+    </delete>
+
+    <delete id="deleteFarmlandByLandIds" parameterType="String">
+        delete from agri_farmland where land_id in 
+        <foreach item="landId" collection="array" open="(" separator="," close=")">
+            #{landId}
+        </foreach>
+    </delete>
+</mapper>

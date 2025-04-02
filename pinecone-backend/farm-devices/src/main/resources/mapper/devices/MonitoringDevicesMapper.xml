@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.farm.devices.mapper.MonitoringDevicesMapper">
+    
+    <resultMap type="MonitoringDevices" id="MonitoringDevicesResult">
+        <result property="monitoringDeviceId"    column="monitoring_device_id"    />
+        <result property="deviceName"    column="device_name"    />
+        <result property="storageCapacity"    column="storage_capacity"    />
+        <result property="location"    column="location"    />
+        <result property="status"    column="status"    />
+        <result property="icon"    column="icon"    />
+        <result property="deviceImage"    column="device_image"    />
+        <result property="remarks"    column="remarks"    />
+        <result property="lastRecord"    column="last_record"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectMonitoringDevicesVo">
+        select monitoring_device_id, device_name, storage_capacity, ST_AsText(location) as location, status, icon, device_image, remarks, last_record, create_time, update_time from agri_monitoring_devices
+    </sql>
+
+    <select id="selectMonitoringDevicesList" parameterType="MonitoringDevices" resultMap="MonitoringDevicesResult">
+        <include refid="selectMonitoringDevicesVo"/>
+        <where>  
+            <if test="deviceName != null  and deviceName != ''"> and device_name like concat(concat('%', #{deviceName}), '%')</if>
+            <if test="status != null "> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectMonitoringDevicesByMonitoringDeviceId" parameterType="Long" resultMap="MonitoringDevicesResult">
+        <include refid="selectMonitoringDevicesVo"/>
+        where monitoring_device_id = #{monitoringDeviceId}
+    </select>
+        
+    <insert id="insertMonitoringDevices" parameterType="MonitoringDevices" useGeneratedKeys="true" keyProperty="monitoringDeviceId">
+        insert into agri_monitoring_devices
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="deviceName != null">device_name,</if>
+            <if test="storageCapacity != null">storage_capacity,</if>
+            <if test="location != null">location,</if>
+            <if test="status != null">status,</if>
+            <if test="icon != null">icon,</if>
+            <if test="deviceImage != null">device_image,</if>
+            <if test="remarks != null">remarks,</if>
+            <if test="lastRecord != null">last_record,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="deviceName != null">#{deviceName},</if>
+            <if test="storageCapacity != null">#{storageCapacity},</if>
+            <if test="location != null">ST_GeomFromText(#{location},4326),</if>
+            <if test="status != null">#{status},</if>
+            <if test="icon != null">#{icon},</if>
+            <if test="deviceImage != null">#{deviceImage},</if>
+            <if test="remarks != null">#{remarks},</if>
+            <if test="lastRecord != null">#{lastRecord},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateMonitoringDevices" parameterType="MonitoringDevices">
+        update agri_monitoring_devices
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="deviceName != null">device_name = #{deviceName},</if>
+            <if test="storageCapacity != null">storage_capacity = #{storageCapacity},</if>
+            <if test="location != null">location = ST_GeomFromText(#{location},4326),</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="icon != null">icon = #{icon},</if>
+            <if test="deviceImage != null">device_image = #{deviceImage},</if>
+            <if test="remarks != null">remarks = #{remarks},</if>
+            <if test="lastRecord != null">last_record = #{lastRecord},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where monitoring_device_id = #{monitoringDeviceId}
+    </update>
+
+    <delete id="deleteMonitoringDevicesByMonitoringDeviceId" parameterType="Long">
+        delete from agri_monitoring_devices where monitoring_device_id = #{monitoringDeviceId}
+    </delete>
+
+    <delete id="deleteMonitoringDevicesByMonitoringDeviceIds" parameterType="String">
+        delete from agri_monitoring_devices where monitoring_device_id in 
+        <foreach item="monitoringDeviceId" collection="array" open="(" separator="," close=")">
+            #{monitoringDeviceId}
+        </foreach>
+    </delete>
+</mapper>
