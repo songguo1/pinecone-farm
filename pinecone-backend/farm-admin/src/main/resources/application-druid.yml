@@ -1,5 +1,7 @@
 # 数据源配置
 spring:
+    profiles:
+        active: dev
     datasource:
         type: com.alibaba.druid.pool.DruidDataSource
         driverClassName: org.postgresql.Driver
@@ -7,8 +9,8 @@ spring:
             # 主库数据源
             master:
                 url: jdbc:postgresql://localhost:5432/farm?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=Asia/Shanghai
-                username:
-                password:
+                username: ${postgres.username}
+                password: ${postgres.password}
             # 从库数据源
             slave:
                 # 从数据源开关/默认关闭
