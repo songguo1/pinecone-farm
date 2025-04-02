@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.farm.drones.mapper.PilotsMapper">
+    
+    <resultMap type="Pilots" id="PilotsResult">
+        <result property="id"    column="id"    />
+        <result property="name"    column="name"    />
+        <result property="licenseNumber"    column="license_number"    />
+        <result property="phone"    column="phone"    />
+        <result property="email"    column="email"    />
+        <result property="createdTime"    column="created_time"    />
+        <result property="updatedTime"    column="updated_time"    />
+    </resultMap>
+
+    <sql id="selectPilotsVo">
+        select id, name, license_number, phone, email, created_time, updated_time from agri_pilots
+    </sql>
+
+    <select id="selectPilotsList" parameterType="Pilots" resultMap="PilotsResult">
+        <include refid="selectPilotsVo"/>
+        <where>  
+            <if test="name != null  and name != ''"> and name like concat(concat('%', #{name}), '%')</if>
+        </where>
+    </select>
+    
+    <select id="selectPilotsById" parameterType="Long" resultMap="PilotsResult">
+        <include refid="selectPilotsVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertPilots" parameterType="Pilots" useGeneratedKeys="true" keyProperty="id">
+        insert into agri_pilots
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">name,</if>
+            <if test="licenseNumber != null">license_number,</if>
+            <if test="phone != null">phone,</if>
+            <if test="email != null">email,</if>
+            <if test="createdTime != null">created_time,</if>
+            <if test="updatedTime != null">updated_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null">#{name},</if>
+            <if test="licenseNumber != null">#{licenseNumber},</if>
+            <if test="phone != null">#{phone},</if>
+            <if test="email != null">#{email},</if>
+            <if test="createdTime != null">#{createdTime},</if>
+            <if test="updatedTime != null">#{updatedTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updatePilots" parameterType="Pilots">
+        update agri_pilots
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null">name = #{name},</if>
+            <if test="licenseNumber != null">license_number = #{licenseNumber},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="createdTime != null">created_time = #{createdTime},</if>
+            <if test="updatedTime != null">updated_time = #{updatedTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deletePilotsById" parameterType="Long">
+        delete from agri_pilots where id = #{id}
+    </delete>
+
+    <delete id="deletePilotsByIds" parameterType="String">
+        delete from agri_pilots where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

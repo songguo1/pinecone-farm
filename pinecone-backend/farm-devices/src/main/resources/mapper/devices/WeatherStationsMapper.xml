@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.farm.devices.mapper.WeatherStationsMapper">
+    
+    <resultMap type="WeatherStations" id="WeatherStationsResult">
+        <result property="weatherStationId"    column="weather_station_id"    />
+        <result property="stationName"    column="station_name"    />
+        <result property="location"    column="location"    />
+        <result property="status"    column="status"    />
+        <result property="icon"    column="icon"    />
+        <result property="deviceImage"    column="device_image"    />
+        <result property="remarks"    column="remarks"    />
+        <result property="lastUpdate"    column="last_update"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectWeatherStationsVo">
+        select weather_station_id, station_name, ST_AsText(location) as location, status, icon, device_image, remarks, last_update, create_time, update_time from agri_weather_stations
+    </sql>
+
+    <select id="selectWeatherStationsList" parameterType="WeatherStations" resultMap="WeatherStationsResult">
+        <include refid="selectWeatherStationsVo"/>
+        <where>  
+            <if test="stationName != null  and stationName != ''"> and station_name like concat(concat('%', #{stationName}), '%')</if>
+            <if test="status != null "> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectWeatherStationsByWeatherStationId" parameterType="Long" resultMap="WeatherStationsResult">
+        <include refid="selectWeatherStationsVo"/>
+        where weather_station_id = #{weatherStationId}
+    </select>
+        
+    <insert id="insertWeatherStations" parameterType="WeatherStations" useGeneratedKeys="true" keyProperty="weatherStationId">
+        insert into agri_weather_stations
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="stationName != null">station_name,</if>
+            <if test="location != null">location,</if>
+            <if test="status != null">status,</if>
+            <if test="icon != null">icon,</if>
+            <if test="deviceImage != null">device_image,</if>
+            <if test="remarks != null">remarks,</if>
+            <if test="lastUpdate != null">last_update,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="stationName != null">#{stationName},</if>
+            <if test="location != null">ST_GeomFromText(#{location},4326),</if>
+            <if test="status != null">#{status},</if>
+            <if test="icon != null">#{icon},</if>
+            <if test="deviceImage != null">#{deviceImage},</if>
+            <if test="remarks != null">#{remarks},</if>
+            <if test="lastUpdate != null">#{lastUpdate},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateWeatherStations" parameterType="WeatherStations">
+        update agri_weather_stations
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="stationName != null">station_name = #{stationName},</if>
+            <if test="location != null">location = ST_GeomFromText(#{location},4326),</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="icon != null">icon = #{icon},</if>
+            <if test="deviceImage != null">device_image = #{deviceImage},</if>
+            <if test="remarks != null">remarks = #{remarks},</if>
+            <if test="lastUpdate != null">last_update = #{lastUpdate},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where weather_station_id = #{weatherStationId}
+    </update>
+
+    <delete id="deleteWeatherStationsByWeatherStationId" parameterType="Long">
+        delete from agri_weather_stations where weather_station_id = #{weatherStationId}
+    </delete>
+
+    <delete id="deleteWeatherStationsByWeatherStationIds" parameterType="String">
+        delete from agri_weather_stations where weather_station_id in 
+        <foreach item="weatherStationId" collection="array" open="(" separator="," close=")">
+            #{weatherStationId}
+        </foreach>
+    </delete>
+</mapper>

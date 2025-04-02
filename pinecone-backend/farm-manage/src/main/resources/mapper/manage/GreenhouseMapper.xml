@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.farm.manage.mapper.GreenhouseMapper">
+    
+    <resultMap type="Greenhouse" id="GreenhouseResult">
+        <result property="greenhouseId"    column="greenhouse_id"    />
+        <result property="greenhouseName"    column="greenhouse_name"    />
+        <result property="structureType"    column="structure_type"    />
+        <result property="heatingSystem"    column="heating_system"    />
+        <result property="coverMaterial"    column="cover_material"    />
+        <result property="geom"    column="geom"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectGreenhouseVo">
+        select greenhouse_id, greenhouse_name, structure_type, heating_system, cover_material, ST_AsText(geom) as geom, create_time, update_time, create_by, update_by, remark from agri_greenhouse
+    </sql>
+
+    <select id="selectGreenhouseList" parameterType="Greenhouse" resultMap="GreenhouseResult">
+        <include refid="selectGreenhouseVo"/>
+        <where>  
+            <if test="greenhouseName != null  and greenhouseName != ''"> and greenhouse_name like concat(concat('%', #{greenhouseName}), '%')</if>
+            <if test="structureType != null  and structureType != ''"> and structure_type = #{structureType}</if>
+            <if test="heatingSystem != null "> and heating_system = #{heatingSystem}</if>
+            <if test="coverMaterial != null  and coverMaterial != ''"> and cover_material = #{coverMaterial}</if>
+        </where>
+    </select>
+
+    <select id="getAllGreenhouse"  resultMap="GreenhouseResult">
+        <include refid="selectGreenhouseVo"/>
+    </select>
+    
+    <select id="selectGreenhouseByGreenhouseId" parameterType="Long" resultMap="GreenhouseResult">
+        <include refid="selectGreenhouseVo"/>
+        where greenhouse_id = #{greenhouseId}
+    </select>
+        
+    <insert id="insertGreenhouse" parameterType="Greenhouse" useGeneratedKeys="true" keyProperty="greenhouseId">
+        insert into agri_greenhouse
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="greenhouseName != null">greenhouse_name,</if>
+            <if test="structureType != null">structure_type,</if>
+            <if test="heatingSystem != null">heating_system,</if>
+            <if test="coverMaterial != null">cover_material,</if>
+            <if test="geom != null">geom,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="greenhouseName != null">#{greenhouseName},</if>
+            <if test="structureType != null">#{structureType},</if>
+            <if test="heatingSystem != null">#{heatingSystem},</if>
+            <if test="coverMaterial != null">#{coverMaterial},</if>
+            <if test="geom != null">ST_GeomFromText(#{geom}, 4326),</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateGreenhouse" parameterType="Greenhouse">
+        update agri_greenhouse
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="greenhouseName != null">greenhouse_name = #{greenhouseName},</if>
+            <if test="structureType != null">structure_type = #{structureType},</if>
+            <if test="heatingSystem != null">heating_system = #{heatingSystem},</if>
+            <if test="coverMaterial != null">cover_material = #{coverMaterial},</if>
+            <if test="geom != null">geom = ST_GeomFromText(#{geom}, 4326),</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where greenhouse_id = #{greenhouseId}
+    </update>
+
+    <delete id="deleteGreenhouseByGreenhouseId" parameterType="Long">
+        delete from agri_greenhouse where greenhouse_id = #{greenhouseId}
+    </delete>
+
+    <delete id="deleteGreenhouseByGreenhouseIds" parameterType="String">
+        delete from agri_greenhouse where greenhouse_id in 
+        <foreach item="greenhouseId" collection="array" open="(" separator="," close=")">
+            #{greenhouseId}
+        </foreach>
+    </delete>
+</mapper>

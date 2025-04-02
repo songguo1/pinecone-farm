@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.farm.devices.mapper.SensorsMapper">
+    
+    <resultMap type="Sensors" id="SensorsResult">
+        <result property="sensorId"    column="sensor_id"    />
+        <result property="sensorName"    column="sensor_name"    />
+        <result property="sensorType"    column="sensor_type"    />
+        <result property="measurementUnit"    column="measurement_unit"    />
+        <result property="location"    column="location"    />
+        <result property="status"    column="status"    />
+        <result property="icon"    column="icon"    />
+        <result property="deviceImage"    column="device_image"    />
+        <result property="remarks"    column="remarks"    />
+        <result property="lastReading"    column="last_reading"    />
+        <result property="lastValue"    column="last_value"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectSensorsVo">
+        select sensor_id, sensor_name, sensor_type, measurement_unit, ST_AsText(location) as location, status, icon, device_image, remarks, last_reading, last_value, create_time, update_time from agri_sensors
+    </sql>
+
+    <select id="selectSensorsList" parameterType="Sensors" resultMap="SensorsResult">
+        <include refid="selectSensorsVo"/>
+        <where>  
+            <if test="sensorName != null  and sensorName != ''"> and sensor_name like concat(concat('%', #{sensorName}), '%')</if>
+            <if test="sensorType != null "> and sensor_type = #{sensorType}</if>
+            <if test="status != null "> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectSensorsBySensorId" parameterType="Long" resultMap="SensorsResult">
+        <include refid="selectSensorsVo"/>
+        where sensor_id = #{sensorId}
+    </select>
+        
+    <insert id="insertSensors" parameterType="Sensors" useGeneratedKeys="true" keyProperty="sensorId">
+        insert into agri_sensors
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="sensorName != null">sensor_name,</if>
+            <if test="sensorType != null">sensor_type,</if>
+            <if test="measurementUnit != null">measurement_unit,</if>
+            <if test="location != null">location,</if>
+            <if test="status != null">status,</if>
+            <if test="icon != null">icon,</if>
+            <if test="deviceImage != null">device_image,</if>
+            <if test="remarks != null">remarks,</if>
+            <if test="lastReading != null">last_reading,</if>
+            <if test="lastValue != null">last_value,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="sensorName != null">#{sensorName},</if>
+            <if test="sensorType != null">#{sensorType},</if>
+            <if test="measurementUnit != null">#{measurementUnit},</if>
+            <if test="location != null">ST_GeomFromText(#{location},4326),</if>
+            <if test="status != null">#{status},</if>
+            <if test="icon != null">#{icon},</if>
+            <if test="deviceImage != null">#{deviceImage},</if>
+            <if test="remarks != null">#{remarks},</if>
+            <if test="lastReading != null">#{lastReading},</if>
+            <if test="lastValue != null">#{lastValue},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateSensors" parameterType="Sensors">
+        update agri_sensors
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="sensorName != null">sensor_name = #{sensorName},</if>
+            <if test="sensorType != null">sensor_type = #{sensorType},</if>
+            <if test="measurementUnit != null">measurement_unit = #{measurementUnit},</if>
+            <if test="location != null">location = ST_GeomFromText(#{location},4326),</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="icon != null">icon = #{icon},</if>
+            <if test="deviceImage != null">device_image = #{deviceImage},</if>
+            <if test="remarks != null">remarks = #{remarks},</if>
+            <if test="lastReading != null">last_reading = #{lastReading},</if>
+            <if test="lastValue != null">last_value = #{lastValue},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where sensor_id = #{sensorId}
+    </update>
+
+    <delete id="deleteSensorsBySensorId" parameterType="Long">
+        delete from agri_sensors where sensor_id = #{sensorId}
+    </delete>
+
+    <delete id="deleteSensorsBySensorIds" parameterType="String">
+        delete from agri_sensors where sensor_id in 
+        <foreach item="sensorId" collection="array" open="(" separator="," close=")">
+            #{sensorId}
+        </foreach>
+    </delete>
+</mapper>

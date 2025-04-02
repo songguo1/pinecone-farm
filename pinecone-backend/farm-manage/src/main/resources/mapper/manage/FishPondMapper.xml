@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.farm.manage.mapper.FishPondMapper">
+    
+    <resultMap type="FishPond" id="FishPondResult">
+        <result property="pondId"    column="pond_id"    />
+        <result property="pondName"    column="pond_name"    />
+        <result property="waterDepth"    column="water_depth"    />
+        <result property="waterQuality"    column="water_quality"    />
+        <result property="oxygenLevel"    column="oxygen_level"    />
+        <result property="feedType"    column="feed_type"    />
+        <result property="geom"    column="geom"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectFishPondVo">
+        select pond_id, pond_name, water_depth, water_quality, oxygen_level, feed_type, ST_AsText(geom)as geom, create_time, update_time, create_by, update_by, remark from agri_fish_pond
+    </sql>
+
+    <select id="selectFishPondList" parameterType="FishPond" resultMap="FishPondResult">
+        <include refid="selectFishPondVo"/>
+        <where>  
+            <if test="pondName != null  and pondName != ''"> and pond_name like concat(concat('%', #{pondName}), '%')</if>
+            <if test="waterQuality != null  and waterQuality != ''"> and water_quality = #{waterQuality}</if>
+            <if test="feedType != null  and feedType != ''"> and feed_type = #{feedType}</if>
+        </where>
+    </select>
+
+    <select id="getAllFishPond"  resultMap="FishPondResult">
+        <include refid="selectFishPondVo"/>
+    </select>
+    
+    <select id="selectFishPondByPondId" parameterType="Long" resultMap="FishPondResult">
+        <include refid="selectFishPondVo"/>
+        where pond_id = #{pondId}
+    </select>
+        
+    <insert id="insertFishPond" parameterType="FishPond" useGeneratedKeys="true" keyProperty="pondId">
+        insert into agri_fish_pond
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="pondName != null">pond_name,</if>
+            <if test="waterDepth != null">water_depth,</if>
+            <if test="waterQuality != null">water_quality,</if>
+            <if test="oxygenLevel != null">oxygen_level,</if>
+            <if test="feedType != null">feed_type,</if>
+            <if test="geom != null">geom,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="pondName != null">#{pondName},</if>
+            <if test="waterDepth != null">#{waterDepth},</if>
+            <if test="waterQuality != null">#{waterQuality},</if>
+            <if test="oxygenLevel != null">#{oxygenLevel},</if>
+            <if test="feedType != null">#{feedType},</if>
+            <if test="geom != null">ST_GeomFromText(#{geom}, 4326),</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateFishPond" parameterType="FishPond">
+        update agri_fish_pond
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="pondName != null">pond_name = #{pondName},</if>
+            <if test="waterDepth != null">water_depth = #{waterDepth},</if>
+            <if test="waterQuality != null">water_quality = #{waterQuality},</if>
+            <if test="oxygenLevel != null">oxygen_level = #{oxygenLevel},</if>
+            <if test="feedType != null">feed_type = #{feedType},</if>
+            <if test="geom != null">geom = ST_GeomFromText(#{geom}, 4326),</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where pond_id = #{pondId}
+    </update>
+
+    <delete id="deleteFishPondByPondId" parameterType="Long">
+        delete from agri_fish_pond where pond_id = #{pondId}
+    </delete>
+
+    <delete id="deleteFishPondByPondIds" parameterType="String">
+        delete from agri_fish_pond where pond_id in 
+        <foreach item="pondId" collection="array" open="(" separator="," close=")">
+            #{pondId}
+        </foreach>
+    </delete>
+</mapper>
