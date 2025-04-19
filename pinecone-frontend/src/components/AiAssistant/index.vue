@@ -1,81 +1,97 @@
 <template>
-  <el-dialog
-    v-model="dialogVisible"
-    title="AI 助手"
-    width="50%"
-    :close-on-click-modal="false"
-    :before-close="handleClose"
-    class="ai-dialog"
-    destroy-on-close
-  >
-    <div class="chat-container">
-      <div v-if="!sessionId" class="initializing-message">
-        正在初始化聊天...
-      </div>
+  <div v-if="dialogVisible" class="ai-assistant-modal">
+    <div class="modal-mask" @click="handleClose"></div>
+    <div class="modal-wrapper">
+      <div class="modal-container">
+        <div class="modal-header">
+          <span class="modal-title">AI 助手</span>
+          <div class="knowledge-base-selector">
+            <el-radio-group
+              v-model="currentKnowledgeBase"
+              @change="handleKnowledgeBaseChange"
+            >
+              <el-radio-button label="base">基地信息</el-radio-button>
+              <el-radio-button label="plant">种植规范</el-radio-button>
+              <el-radio-button label="disease">病虫害</el-radio-button>
+              <el-radio-button label="equipment">设备操作</el-radio-button>
+            </el-radio-group>
+          </div>
+          <el-icon class="close-icon" @click="handleClose"><Close /></el-icon>
+        </div>
+        <div class="chat-container">
+          <div v-if="!sessionId" class="initializing-message">
+            正在初始化聊天...
+          </div>
 
-      <template v-else>
-        <div class="chat-messages" ref="messageContainer">
-          <div
-            v-for="(message, index) in messages"
-            :key="index"
-            :class="['message', message.role]"
-          >
-            <div class="message-content">
-              <div class="avatar">
-                <img :src="message.role === 'user' ? userAvatar : aiAvatar" />
+          <template v-else>
+            <div class="chat-messages" ref="messageContainer">
+              <div
+                v-for="(message, index) in messages"
+                :key="index"
+                :class="['message', message.role]"
+              >
+                <div class="message-content">
+                  <div class="avatar">
+                    <img
+                      :src="message.role === 'user' ? userAvatar : aiAvatar"
+                    />
+                  </div>
+                  <div class="text">
+                    <template v-if="message.role === 'assistant'">
+                      <div v-if="message.think" class="think-box">
+                        <div class="think-header">
+                          <el-icon><Sunny /></el-icon>
+                          思考过程
+                        </div>
+                        <div
+                          class="think-content"
+                          :class="{ thinking: message.isThinking }"
+                          v-html="renderMarkdown(message.think)"
+                        ></div>
+                      </div>
+                      <div
+                        class="answer-content"
+                        :class="{ typing: !message.isThinking && loading }"
+                        v-html="renderMarkdown(message.answer)"
+                      ></div>
+                    </template>
+                    <template v-else>
+                      <div v-html="renderMarkdown(message.content)"></div>
+                    </template>
+                  </div>
+                </div>
+                <div class="time">{{ message.time }}</div>
               </div>
-              <div class="text">
-                <template v-if="message.role === 'assistant'">
-                  <div v-if="message.think" class="think-box">
-                    <div class="think-header">
-                      <el-icon><Sunny /></el-icon>
-                      思考过程
-                    </div>
-                    <div
-                      class="think-content"
-                      :class="{ thinking: message.isThinking }"
-                    >
-                      {{ message.think }}
-                    </div>
-                  </div>
-                  <div
-                    class="answer-content"
-                    :class="{ typing: !message.isThinking && loading }"
-                  >
-                    {{ message.answer }}
-                  </div>
-                </template>
-                <template v-else>
-                  {{ message.content }}
-                </template>
+              <div v-if="currentResponse" class="message assistant">
+                <div v-html="renderMarkdown(currentResponse)"></div>
               </div>
             </div>
-            <div class="time">{{ message.time }}</div>
-          </div>
-          <div v-if="currentResponse" class="message assistant">
-            {{ currentResponse }}
-          </div>
-        </div>
 
-        <div class="input-area">
-          <el-input
-            v-model="inputMessage"
-            :disabled="loading"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入您的问题..."
-            @keyup.enter="sendMessage"
-          >
-            <template #append>
-              <el-button :loading="loading" type="primary" @click="sendMessage">
-                发送
-              </el-button>
-            </template>
-          </el-input>
+            <div class="input-area">
+              <el-input
+                v-model="inputMessage"
+                :disabled="loading"
+                type="textarea"
+                :rows="3"
+                placeholder="请输入您的问题..."
+                @keyup.enter="sendMessage"
+              >
+                <template #append>
+                  <el-button
+                    :loading="loading"
+                    type="primary"
+                    @click="sendMessage"
+                  >
+                    发送
+                  </el-button>
+                </template>
+              </el-input>
+            </div>
+          </template>
         </div>
-      </template>
+      </div>
     </div>
-  </el-dialog>
+  </div>
 </template>
 
 <script setup>
@@ -88,7 +104,8 @@ import {
 } from "@/api/ragflow/chat";
 import userAvatar from "@/assets/screen/user-avatar.png";
 import aiAvatar from "@/assets/screen/ai-avatar.png";
-import { Sunny } from "@element-plus/icons-vue";
+import { Sunny, Close } from "@element-plus/icons-vue";
+import MarkdownIt from "markdown-it";
 
 const props = defineProps({
   modelValue: Boolean,
@@ -105,6 +122,41 @@ const assistantId = ref(null);
 const sessionId = ref(null);
 const messageContainer = ref(null);
 
+// 添加知识库相关的状态
+const currentKnowledgeBase = ref("base");
+const knowledgeBaseMap = {
+  base: import.meta.env.VITE_BASE_CHAT_ID,
+  plant: import.meta.env.VITE_PLANT_CHAT_ID,
+  disease: import.meta.env.VITE_DISEASE_CHAT_ID,
+  equipment: import.meta.env.VITE_EQUIPMENT_CHAT_ID,
+};
+
+const knowledgeBaseLabels = {
+  base: "基地信息",
+  plant: "种植规范",
+  disease: "病虫害",
+  equipment: "设备操作",
+};
+
+// 初始化 markdown-it
+const md = new MarkdownIt({
+  html: true,
+  breaks: true,
+  linkify: true,
+  typographer: true,
+});
+
+// 添加 markdown 渲染函数
+const renderMarkdown = (content) => {
+  if (!content) return "";
+  try {
+    return md.render(content);
+  } catch (error) {
+    console.error("Markdown rendering error:", error);
+    return content;
+  }
+};
+
 // 初始化助手和会话
 const initChat = async () => {
   try {
@@ -112,6 +164,7 @@ const initChat = async () => {
     console.log("开始初始化聊天...");
     const sessionResponse = await createChatSession({
       name: "智慧农业",
+      chat_id: knowledgeBaseMap[currentKnowledgeBase.value], // 传递当前选中的知识库ID
     });
     console.log("会话创建响应:", sessionResponse);
 
@@ -126,8 +179,9 @@ const initChat = async () => {
     messages.value = [
       {
         role: "assistant",
-        answer:
-          "您好！我是智慧农业AI助手，很高兴为您服务。请问有什么可以帮您？",
+        answer: `您好！我是智慧农业AI助手，很高兴为您服务，你可以向我提问关于${
+          knowledgeBaseLabels[currentKnowledgeBase.value]
+        }的问题。`,
         think: "",
         isThinking: false,
       },
@@ -191,6 +245,16 @@ const processAIResponse = (content) => {
   };
 };
 
+// 处理知识库切换
+const handleKnowledgeBaseChange = async (value) => {
+  // 清空当前会话
+  sessionId.value = null;
+  messages.value = [];
+
+  // 重新初始化聊天
+  await initChat();
+};
+
 const sendMessage = async () => {
   if (!inputMessage.value.trim() || loading.value) return;
 
@@ -216,7 +280,18 @@ const sendMessage = async () => {
       question: inputMessage.value.trim(),
       stream: true,
       session_id: sessionId.value,
+      chat_id: knowledgeBaseMap[currentKnowledgeBase.value], // 传递当前选中的知识库ID
     });
+
+    // 添加 AI 的初始消息
+    const aiMessage = {
+      role: "assistant",
+      think: "",
+      answer: "",
+      isThinking: false,
+      time: new Date().toLocaleTimeString(),
+    };
+    messages.value.push(aiMessage);
 
     let accumulatedThink = "";
     let accumulatedAnswer = "";
@@ -280,10 +355,9 @@ const scrollToBottom = () => {
   }
 };
 
-// 组件卸载时清理
-const handleClose = async (done) => {
-  // 可以在这里添加清理会话的逻辑
-  done();
+const handleClose = () => {
+  dialogVisible.value = false;
+  emit("update:modelValue", false);
 };
 
 // 组件挂载时初始化聊天（可选）
@@ -295,16 +369,92 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.chat-container {
-  height: 60vh;
+.ai-assistant-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(3px);
+}
+
+.modal-wrapper {
+  position: relative;
+  width: 90%;
+  height: 90%;
+  max-width: 1200px;
+  min-height: 600px;
+  z-index: 1;
+}
+
+.modal-container {
+  width: 100%;
+  height: 100%;
+  background: rgba(6, 50, 102, 0.95);
+  border: 1px solid #7cfffd;
+  box-shadow: 0 0 20px rgba(124, 255, 253, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
+  backdrop-filter: blur(10px);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid rgba(124, 255, 253, 0.3);
+  background: rgba(6, 50, 102, 0.8);
+}
+
+.modal-title {
+  color: #7cfffd;
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(124, 255, 253, 0.5);
+}
+
+.close-icon {
+  color: #7cfffd;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.3s ease;
+}
+
+.close-icon:hover {
+  color: #fff;
+  transform: rotate(90deg);
+}
+
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .initializing-message {
   text-align: center;
   padding: 20px;
-  color: #909399;
+  color: #7cfffd;
+  font-size: 16px;
 }
 
 .chat-messages {
@@ -316,7 +466,19 @@ onMounted(() => {
 }
 
 .message {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .message-content {
@@ -330,23 +492,30 @@ onMounted(() => {
   height: 40px;
   border-radius: 50%;
   border: 2px solid #7cfffd;
+  box-shadow: 0 0 10px rgba(124, 255, 253, 0.3);
 }
 
 .text {
   background: rgba(124, 255, 253, 0.1);
-  padding: 16px;
+  padding: 10px 12px;
   border-radius: 8px;
   color: #fff;
   max-width: 80%;
   width: fit-content;
   box-shadow: 0 2px 8px rgba(124, 255, 253, 0.1);
+  transition: all 0.3s ease;
+}
+
+.text:hover {
+  box-shadow: 0 4px 12px rgba(124, 255, 253, 0.2);
 }
 
 .time {
   font-size: 12px;
   color: #7cfffd;
-  margin-top: 4px;
+  margin-top: 2px;
   margin-left: 52px;
+  opacity: 0.8;
 }
 
 .message.user {
@@ -361,6 +530,7 @@ onMounted(() => {
 
 .message.user .text {
   background: rgba(124, 255, 253, 0.2);
+  max-width: 90%;
 }
 
 .message.user .time {
@@ -378,66 +548,64 @@ onMounted(() => {
   margin-top: 10px;
   width: 100px;
   float: right;
+  background: rgba(124, 255, 253, 0.2);
+  border-color: #7cfffd;
+  color: #7cfffd;
+  transition: all 0.3s ease;
+}
+
+.input-area .el-button:hover {
+  background: rgba(124, 255, 253, 0.3);
+  transform: translateY(-2px);
 }
 
 :deep(.el-textarea__inner) {
   background: rgba(6, 50, 102, 0.5);
   border: 1px solid rgba(124, 255, 253, 0.3);
   color: #fff;
+  transition: all 0.3s ease;
 }
 
 :deep(.el-textarea__inner:focus) {
   border-color: #7cfffd;
+  box-shadow: 0 0 10px rgba(124, 255, 253, 0.3);
 }
 
-:deep(.ai-dialog .el-dialog) {
-  background: rgba(6, 50, 102, 0.9);
-  border: 1px solid #7cfffd;
-  box-shadow: 0 0 20px rgba(124, 255, 253, 0.3);
-}
-
-:deep(.ai-dialog .el-dialog__header) {
-  border-bottom: 1px solid rgba(124, 255, 253, 0.3);
-}
-
-:deep(.ai-dialog .el-dialog__title) {
-  color: #7cfffd;
-}
-
-:deep(.ai-dialog .el-dialog__headerbtn .el-dialog__close) {
-  color: #7cfffd;
-}
-
-:deep(.ai-dialog .el-button) {
-  background: transparent;
-  border-color: #7cfffd;
-  color: #7cfffd;
-}
-
-:deep(.ai-dialog .el-button--primary) {
-  background: rgba(124, 255, 253, 0.2);
-}
-
-:deep(.ai-dialog .el-button:hover) {
-  background: rgba(124, 255, 253, 0.3);
-  border-color: #7cfffd;
-  color: #fff;
+/* 添加禁用状态下的样式 */
+:deep(.el-textarea__inner:disabled) {
+  background: rgba(6, 50, 102, 0.5);
+  border: 1px solid rgba(124, 255, 253, 0.2);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: not-allowed;
 }
 
 .think-box {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   background: rgba(255, 223, 186, 0.1);
   border-radius: 8px;
-  padding: 12px;
+  padding: 8px 10px;
   border-left: 3px solid #ffd700;
   box-shadow: 0 2px 4px rgba(255, 215, 0, 0.1);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 2px 4px rgba(255, 215, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
+  }
+  100% {
+    box-shadow: 0 2px 4px rgba(255, 215, 0, 0.1);
+  }
 }
 
 .think-header {
   color: #ffd700;
   font-size: 14px;
   font-weight: bold;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -450,63 +618,91 @@ onMounted(() => {
 .think-content {
   color: #ffd700;
   font-size: 13px;
-  line-height: 1.5;
-  white-space: pre-wrap;
+  line-height: 1.4;
   font-family: "Courier New", monospace;
 }
 
 .answer-content {
   color: #fff;
-  line-height: 1.6;
-  margin-top: 10px;
-  white-space: pre-wrap;
+  line-height: 1.4;
+  margin-top: 6px;
 }
 
+/* 移除打字效果相关样式 */
 .answer-content.typing {
-  border-right: 2px solid #7cfffd;
-  animation: typing 0.5s steps(1) infinite;
+  border-right: none;
+  animation: none;
+}
+
+.think-content.thinking {
+  border-right: none;
+  animation: none;
 }
 
 @keyframes typing {
-  0% {
-    border-color: transparent;
-  }
-  50% {
-    border-color: #7cfffd;
-  }
-  100% {
-    border-color: transparent;
-  }
+  /* 移除打字动画 */
 }
 
 .message.assistant .text {
   background: rgba(6, 50, 102, 0.5);
 }
 
-.think-content.thinking {
-  border-right: 2px solid #ffd700;
-  animation: typing 0.5s steps(1) infinite;
-}
-
-.answer-content.typing {
-  border-right: 2px solid #7cfffd;
-  animation: typing 0.5s steps(1) infinite;
-}
-
-@keyframes typing {
-  0% {
-    border-color: transparent;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
   }
-  50% {
-    border-color: currentColor;
-  }
-  100% {
-    border-color: transparent;
+  to {
+    opacity: 1;
   }
 }
 
-.think-content,
-.answer-content {
-  transition: all 0.1s ease-out;
+/* 添加 markdown 内容的样式控制 */
+:deep(.text) {
+  p {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* 控制换行和空白符的显示 */
+  p,
+  li,
+  pre,
+  blockquote {
+    white-space: normal;
+  }
+
+  /* 只在代码块中保留空白符 */
+  pre code {
+    white-space: pre;
+  }
+}
+
+.knowledge-base-selector {
+  flex: 1;
+  text-align: center;
+  margin: 0 20px;
+}
+
+:deep(.el-radio-button__inner) {
+  background: rgba(124, 255, 253, 0.1);
+  border-color: #7cfffd;
+  color: #7cfffd;
+  transition: all 0.3s ease;
+}
+
+:deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
+  background: rgba(124, 255, 253, 0.3);
+  border-color: #7cfffd;
+  color: #fff;
+  box-shadow: -1px 0 0 0 #7cfffd;
+}
+
+:deep(.el-radio-button:first-child .el-radio-button__inner) {
+  border-left-color: #7cfffd;
+}
+
+:deep(.el-radio-button__inner:hover) {
+  color: #fff;
+  background: rgba(124, 255, 253, 0.2);
 }
 </style>

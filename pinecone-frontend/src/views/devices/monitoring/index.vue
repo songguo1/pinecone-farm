@@ -57,30 +57,6 @@
       </el-col>
       <el-col :span="1.5">
         <el-button
-          type="success"
-          plain
-          :icon="Edit"
-          size="small"
-          :disabled="single"
-          @click="handleUpdate"
-          v-hasPermi="['devices:monitoring:edit']"
-          >修改</el-button
-        >
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="danger"
-          plain
-          :icon="Delete"
-          size="small"
-          :disabled="multiple"
-          @click="handleDelete"
-          v-hasPermi="['devices:monitoring:remove']"
-          >删除</el-button
-        >
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
           type="warning"
           plain
           :icon="Download"
@@ -96,77 +72,111 @@
       ></right-toolbar>
     </el-row>
 
-    <el-table
-      v-loading="loading"
-      :data="monitoringList"
-      @selection-change="handleSelectionChange"
-    >
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="ID" align="center" prop="monitoringDeviceId" />
-      <el-table-column label="设备名称" align="center" prop="deviceName" />
-      <el-table-column label="存储容量" align="center" prop="storageCapacity" />
-      <el-table-column label="设备状态" align="center" prop="status">
-        <template #default="scope">
-          <dict-tag :options="device_status" :value="scope.row.status" />
-        </template>
-      </el-table-column>
-      <el-table-column label="图标" align="center" prop="icon" width="100">
-        <template #default="scope">
-          <image-preview :src="scope.row.icon" :width="50" :height="50" />
-        </template>
-      </el-table-column>
-      <el-table-column
-        label="设备图片"
-        align="center"
-        prop="deviceImage"
-        width="100"
+    <!-- 卡片列表 -->
+    <el-row v-loading="loading" :gutter="20">
+      <el-col
+        :xs="24"
+        :sm="12"
+        :md="8"
+        :lg="6"
+        v-for="item in monitoringList"
+        :key="item.monitoringDeviceId"
+        class="mb20"
       >
-        <template #default="scope">
-          <image-preview
-            :src="scope.row.deviceImage"
-            :width="50"
-            :height="50"
-          />
-        </template>
-      </el-table-column>
-      <el-table-column label="备注信息" align="center" prop="remarks" />
-      <el-table-column
-        label="最后一次记录时间"
-        align="center"
-        prop="lastRecord"
-        width="180"
-      >
-        <template #default="scope">
-          <span>{{ parseTime(scope.row.lastRecord, "{y}-{m}-{d}") }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column
-        label="操作"
-        align="center"
-        class-name="small-padding fixed-width"
-      >
-        <template #default="scope">
-          <el-button
-            size="small"
-            type="primary"
-            link
-            :icon="Edit"
-            @click="handleUpdate(scope.row)"
-            v-hasPermi="['devices:monitoring:edit']"
-            >修改</el-button
-          >
-          <el-button
-            size="small"
-            type="primary"
-            link
-            :icon="Delete"
-            @click="handleDelete(scope.row)"
-            v-hasPermi="['devices:monitoring:remove']"
-            >删除</el-button
-          >
-        </template>
-      </el-table-column>
-    </el-table>
+        <el-card
+          :body-style="{ padding: '0px' }"
+          shadow="hover"
+          class="device-card"
+        >
+          <div class="device-header-area">
+            <div class="device-icon">
+              <el-image :src="item.icon" fit="contain" class="icon-image">
+                <template #error>
+                  <el-icon class="icon-placeholder"><Monitor /></el-icon>
+                </template>
+              </el-image>
+            </div>
+            <div class="device-status">
+              <dict-tag :options="device_status" :value="item.status" />
+            </div>
+          </div>
+          <div class="device-image">
+            <el-image :src="item.deviceImage" fit="cover">
+              <template #error>
+                <div class="image-slot">
+                  <el-icon><Picture /></el-icon>
+                </div>
+              </template>
+            </el-image>
+          </div>
+          <div class="device-content">
+            <div class="device-title">
+              <span class="device-name">{{ item.deviceName }}</span>
+            </div>
+            <div class="device-info">
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-label">
+                    <el-icon><DataLine /></el-icon>
+                    <span>存储容量</span>
+                  </div>
+                  <div class="info-value">{{ item.storageCapacity }}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">
+                    <el-icon><Timer /></el-icon>
+                    <span>最后记录</span>
+                  </div>
+                  <div class="info-value">
+                    {{ parseTime(item.lastRecord, "{y}-{m}-{d}") }}
+                  </div>
+                </div>
+              </div>
+              <div class="info-item full-width" v-if="item.remarks">
+                <div class="info-label">
+                  <el-icon><InfoFilled /></el-icon>
+                  <span>备注</span>
+                </div>
+                <div class="info-value">
+                  <el-tooltip
+                    :content="item.remarks"
+                    placement="top"
+                    :hide-after="0"
+                  >
+                    <span class="remarks">{{ item.remarks }}</span>
+                  </el-tooltip>
+                </div>
+              </div>
+            </div>
+            <div class="device-actions">
+              <el-button
+                type="primary"
+                link
+                :icon="InfoFilled"
+                @click="handleView(item)"
+                >查看</el-button
+              >
+              <el-button
+                type="primary"
+                link
+                :icon="Edit"
+                @click="handleUpdate(item)"
+                v-hasPermi="['devices:monitoring:edit']"
+                >修改</el-button
+              >
+              <el-button
+                type="danger"
+                link
+                :icon="Delete"
+                @click="handleDelete(item)"
+                v-hasPermi="['devices:monitoring:remove']"
+                >删除</el-button
+              >
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
 
     <pagination
       v-show="total > 0"
@@ -204,6 +214,26 @@
         <el-form-item label="设备图片" prop="deviceImage">
           <image-upload v-model="form.deviceImage" />
         </el-form-item>
+        <el-form-item label="经度" prop="longitude">
+          <el-input-number
+            v-model="form.longitude"
+            :precision="6"
+            :step="0.000001"
+            :min="-180"
+            :max="180"
+            placeholder="请输入经度"
+          />
+        </el-form-item>
+        <el-form-item label="纬度" prop="latitude">
+          <el-input-number
+            v-model="form.latitude"
+            :precision="6"
+            :step="0.000001"
+            :min="-90"
+            :max="90"
+            placeholder="请输入纬度"
+          />
+        </el-form-item>
         <el-form-item label="备注信息" prop="remarks">
           <el-input
             v-model="form.remarks"
@@ -219,8 +249,199 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 添加新的查看详情弹窗 -->
+    <el-dialog
+      v-model="viewDialogVisible"
+      title="查看设备位置"
+      width="500px"
+      append-to-body
+    >
+      <div class="view-dialog-content">
+        <Map-view
+          v-if="viewDialogVisible"
+          :Id="selectedDeviceId"
+          type="monitoring"
+        ></Map-view>
+      </div>
+    </el-dialog>
   </div>
 </template>
+
+<style scoped>
+.mb20 {
+  margin-bottom: 15px; /* 减少底部间距 */
+}
+
+.device-card {
+  transition: all 0.3s;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 100%; /* 确保所有卡片高度一致 */
+  display: flex;
+  flex-direction: column;
+}
+
+.device-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.device-header-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px; /* 减少上下内边距 */
+  background: #f8f9fa;
+}
+
+.device-icon {
+  width: 32px; /* 减小图标尺寸 */
+  height: 32px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.icon-image {
+  width: 24px; /* 减小图标尺寸 */
+  height: 24px;
+}
+
+.icon-placeholder {
+  font-size: 20px; /* 减小占位图标尺寸 */
+  color: #909399;
+}
+
+.device-image {
+  height: 140px; /* 减小图片高度 */
+  overflow: hidden;
+  position: relative;
+}
+
+.device-image .el-image {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.3s;
+}
+
+.device-card:hover .device-image .el-image {
+  transform: scale(1.05);
+}
+
+.image-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background: #f5f7fa;
+  color: #909399;
+  font-size: 24px;
+}
+
+.device-content {
+  padding: 12px; /* 减少内边距 */
+  flex: 1; /* 让内容区域填充剩余空间 */
+  display: flex;
+  flex-direction: column;
+}
+
+.device-title {
+  margin-bottom: 10px; /* 减少底部间距 */
+  padding-bottom: 8px; /* 减少底部内边距 */
+  border-bottom: 1px solid #ebeef5;
+}
+
+.device-name {
+  font-size: 16px; /* 减小字体大小 */
+  font-weight: 600;
+  color: #303133;
+}
+
+.device-info {
+  margin: 8px 0; /* 减少上下间距 */
+  flex: 1; /* 让信息区域填充剩余空间 */
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px; /* 减少网格间距 */
+  margin-bottom: 8px; /* 减少底部间距 */
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px; /* 减少内部元素间距 */
+}
+
+.info-item.full-width {
+  grid-column: 1 / -1;
+  border-top: 1px solid #ebeef5;
+  padding-top: 8px; /* 减少上内边距 */
+  margin-top: 4px;
+}
+
+.info-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #909399;
+  font-size: 12px; /* 减小字体大小 */
+}
+
+.info-label .el-icon {
+  font-size: 14px; /* 减小图标大小 */
+  color: #409eff;
+}
+
+.info-value {
+  color: #303133;
+  font-size: 13px; /* 减小字体大小 */
+  font-weight: 500;
+}
+
+.remarks {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  color: #606266;
+}
+
+.device-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px; /* 减少按钮间距 */
+  margin-top: 10px; /* 减少顶部间距 */
+  padding-top: 10px; /* 减少顶部内边距 */
+  border-top: 1px solid #ebeef5;
+}
+
+.view-dialog-content {
+  width: 100%;
+  height: 600px;
+  position: relative;
+}
+
+/* 确保弹窗内容区域也具有足够的高度 */
+:deep(.el-dialog__body) {
+  height: 600px;
+  padding: 20px;
+  overflow: hidden;
+}
+
+:deep(.el-dialog) {
+  margin-top: 5vh !important;
+}
+</style>
 
 <script setup>
 import { ref, reactive, onMounted } from "vue";
@@ -240,8 +461,13 @@ import {
   Edit,
   Delete,
   Download,
+  Picture,
+  Monitor,
+  DataLine,
+  Timer,
+  InfoFilled,
 } from "@element-plus/icons-vue";
-
+import MapView from "@/components/View/index.vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
@@ -281,7 +507,13 @@ const rules = reactive({
     { required: true, message: "设备名称不能为空", trigger: "blur" },
   ],
   status: [{ required: true, message: "设备状态不能为空", trigger: "change" }],
+  longitude: [{ required: true, message: "经度不能为空", trigger: "blur" }],
+  latitude: [{ required: true, message: "纬度不能为空", trigger: "blur" }],
 });
+
+// 添加新的响应式变量
+const viewDialogVisible = ref(false);
+const selectedDeviceId = ref(null);
 
 // 查询列表
 const getList = async () => {
@@ -305,6 +537,8 @@ const reset = () => {
   form.deviceImage = null;
   form.remarks = null;
   form.lastRecord = null;
+  form.longitude = null;
+  form.latitude = null;
   formRef.value?.resetFields();
 };
 
@@ -338,21 +572,13 @@ const handleAdd = () => {
   // reset();
   // open.value = true;
   // title.value = "添加监控设备";
-  router.push("/devices/monitoring/add")
+  router.push("/devices/monitoring/add");
 };
 
 // 修改按钮操作
 const handleUpdate = async (row) => {
-  reset();
   const monitoringDeviceId = row.monitoringDeviceId || ids.value;
-  try {
-    const response = await getMonitoring(monitoringDeviceId);
-    Object.assign(form, response.data);
-    open.value = true;
-    title.value = "修改监控设备";
-  } catch (error) {
-    console.error("获取监控设备信息失败", error);
-  }
+  router.push(`/devices/monitoring-edit/index/${monitoringDeviceId}`);
 };
 
 // 提交按钮
@@ -400,6 +626,12 @@ const handleExport = () => {
     },
     `monitoring_${new Date().getTime()}.xlsx`
   );
+};
+
+// 查看按钮操作
+const handleView = (row) => {
+  selectedDeviceId.value = row.monitoringDeviceId;
+  viewDialogVisible.value = true;
 };
 
 onMounted(() => {

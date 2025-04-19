@@ -181,14 +181,13 @@ const submitForm = () => {
     if (valid) {
       try {
         if (form.value.monitoringDeviceId != null) {
-          console.log(form.value);
           await updateMonitoring(form.value);
           ElMessage.success("修改成功");
         } else {
           await addMonitoring(form.value);
           ElMessage.success("新增成功");
         }
-        router.push("/devices/monitoring");
+        router.push({ name: "Monitoring" });
       } catch (error) {
         console.error("提交失败", error);
       }

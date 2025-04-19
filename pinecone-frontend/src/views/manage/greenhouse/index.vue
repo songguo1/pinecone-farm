@@ -120,7 +120,6 @@
       @selection-change="handleSelectionChange"
     >
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="ID" align="center" prop="greenhouseId" />
       <el-table-column label="大棚名称" align="center" prop="greenhouseName" />
       <el-table-column label="大棚结构类型" align="center" prop="structureType">
         <template #default="{ row }">
@@ -136,7 +135,14 @@
           <dict-tag :options="heating_system" :value="row.heatingSystem" />
         </template>
       </el-table-column>
-      <el-table-column label="覆盖材料" align="center" prop="coverMaterial" />
+      <el-table-column label="覆盖材料" align="center" prop="coverMaterial">
+        <template #default="scope">
+          <dict-tag
+            :options="agri_cover_material"
+            :value="scope.row.coverMaterial"
+          />
+        </template>
+      </el-table-column>
       <el-table-column label="备注信息" align="center" prop="remark" />
       <el-table-column
         label="操作"
@@ -216,8 +222,15 @@
           </el-select>
         </el-form-item>
         <el-form-item label="覆盖材料" prop="coverMaterial">
-          <el-input v-model="form.coverMaterial" placeholder="请输入覆盖材料" />
-        </el-form-item>
+        <el-select v-model="queryParams.coverMaterial" placeholder="请选择覆盖材料" clearable>
+          <el-option
+            v-for="dict in agri_cover_material"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
+      </el-form-item>
         <el-form-item label="备注信息" prop="remark">
           <el-input
             v-model="form.remark"
@@ -242,7 +255,11 @@
       append-to-body
     >
       <div class="view-dialog-content">
-        <Map-view :Id="selectedGreenhouseId" type="greenhouse"></Map-view>
+        <Map-view
+          v-if="viewDialogVisible"
+          :Id="selectedGreenhouseId"
+          type="greenhouse"
+        ></Map-view>
       </div>
     </el-dialog>
   </div>
@@ -268,9 +285,10 @@ import {
 } from "@/api/manage/greenhouse";
 const { proxy } = getCurrentInstance();
 
-const { heating_system, structure_type } = proxy.useDict(
+const { heating_system, structure_type, agri_cover_material } = proxy.useDict(
   "heating_system",
-  "structure_type"
+  "structure_type",
+  "agri_cover_material"
 );
 
 // 遮罩层

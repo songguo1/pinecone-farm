@@ -114,7 +114,6 @@
       @selection-change="handleSelectionChange"
     >
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="ID" align="center" prop="id" />
       <el-table-column label="无人机型号" align="center" prop="droneModel" />
       <el-table-column
         label="无人机序列号"

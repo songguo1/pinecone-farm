@@ -132,7 +132,7 @@ export const dynamicRoutes = [
       {
         path: "index/:dictId(\\d+)",
         component: () => import("@/views/system/dict/data"),
-        name: "Data",
+        name: "DictData",
         meta: { title: "字典数据", activeMenu: "/system/dict" },
       },
     ],
@@ -165,6 +165,50 @@ export const dynamicRoutes = [
       },
     ],
   },
+  {
+    path: "/devices/monitoring-edit",
+    component: Layout,
+    hidden: true,
+    permissions: ["devices:monitoring:edit"],
+    children: [
+      {
+        path: "index/:id",
+        component: () => import("@/views/devices/monitoring/edit/index"),
+        name: "MonitoringEdit",
+        meta: { title: "修改监控设备", activeMenu: "/devices/monitoring" },
+      },
+    ],
+  },
+  {
+    path: "/devices/sensors-edit",
+    component: Layout,
+    hidden: true,
+    permissions: ["devices:sensors:edit"],
+    children: [
+      {
+        path: "index/:id",
+        component: () => import("@/views/devices/sensors/edit/index"),
+        name: "SensorsEdit",
+        meta: { title: "修改传感器", activeMenu: "/devices/sensors" },
+      },
+    ],
+  },
+  {
+    path: "/devices/weather-edit",
+    component: Layout,
+    hidden: true,
+    permissions: ["devices:weather:edit"],
+    children: [
+      {
+        path: "index/:id",
+        component: () => import("@/views/devices/weather/edit/index"),
+        name: "WeatherEdit",
+        meta: { title: "修改气象站", activeMenu: "/devices/weather" },
+      },
+    ],
+  },
+
+  
 ];
 
 const router = createRouter({

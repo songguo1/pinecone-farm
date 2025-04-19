@@ -17,7 +17,15 @@ const props = defineProps({
   type: {
     type: String,
     default: "farmland",
-    validator: (value) => ["farmland", "greenhouse", "pond"].includes(value),
+    validator: (value) =>
+      [
+        "farmland",
+        "greenhouse",
+        "pond",
+        "monitoring",
+        "sensor",
+        "weather",
+      ].includes(value),
   },
 });
 

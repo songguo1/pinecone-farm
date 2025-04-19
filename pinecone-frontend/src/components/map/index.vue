@@ -10,10 +10,10 @@
     >
       <el-button-group>
         <el-button type="primary" @click="startDrawing" :disabled="isDrawing">
-          开始绘制
+          开始
         </el-button>
         <el-button type="warning" @click="stopDrawing" :disabled="!isDrawing">
-          停止绘制
+          停止
         </el-button>
         <el-button
           type="danger"

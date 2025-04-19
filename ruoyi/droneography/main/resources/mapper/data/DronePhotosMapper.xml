@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.farm.data.mapper.DronePhotosMapper">
+    
+    <resultMap type="DronePhotos" id="DronePhotosResult">
+        <result property="photoId"    column="photo_id"    />
+        <result property="photoPath"    column="photo_path"    />
+        <result property="taskId"    column="task_id"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="updateBy"    column="update_by"    />
+    </resultMap>
+
+    <sql id="selectDronePhotosVo">
+        select photo_id, photo_path, task_id, create_time, update_time, create_by, update_by from agri_drone_photos
+    </sql>
+
+    <select id="selectDronePhotosList" parameterType="DronePhotos" resultMap="DronePhotosResult">
+        <include refid="selectDronePhotosVo"/>
+        <where>  
+            <if test="taskId != null  and taskId != ''"> and task_id = #{taskId}</if>
+        </where>
+    </select>
+    
+    <select id="selectDronePhotosByPhotoId" parameterType="Long" resultMap="DronePhotosResult">
+        <include refid="selectDronePhotosVo"/>
+        where photo_id = #{photoId}
+    </select>
+
+    <insert id="insertDronePhotos" parameterType="DronePhotos" useGeneratedKeys="true" keyProperty="photoId">
+        insert into agri_drone_photos
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="photoPath != null and photoPath != ''">photo_path,</if>
+            <if test="taskId != null">task_id,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="updateBy != null">update_by,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="photoPath != null and photoPath != ''">#{photoPath},</if>
+            <if test="taskId != null">#{taskId},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDronePhotos" parameterType="DronePhotos">
+        update agri_drone_photos
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="photoPath != null and photoPath != ''">photo_path = #{photoPath},</if>
+            <if test="taskId != null">task_id = #{taskId},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+        </trim>
+        where photo_id = #{photoId}
+    </update>
+
+    <delete id="deleteDronePhotosByPhotoId" parameterType="Long">
+        delete from agri_drone_photos where photo_id = #{photoId}
+    </delete>
+
+    <delete id="deleteDronePhotosByPhotoIds" parameterType="String">
+        delete from agri_drone_photos where photo_id in 
+        <foreach item="photoId" collection="array" open="(" separator="," close=")">
+            #{photoId}
+        </foreach>
+    </delete>
+</mapper>

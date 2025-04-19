@@ -124,19 +124,19 @@
       </div>
     </div>
 
-    <!-- 添加 AI 助手组件 -->
+    <!-- 使用全新的方式显示AI助手 -->
     <AiAssistant v-model="showAiDialog" />
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch, nextTick } from "vue";
 import { initViewer } from "@/utils/screen/viewer";
 import { configureTianDiTuLayers } from "@/utils/screen/layers";
 import { addWaterEffect } from "@/utils/screen/water";
 import { loadModel } from "@/utils/screen/model";
 import { initBorderLayer } from "@/utils/screen/border";
-import { renderBillboard } from "@/utils/screen/billboard.js";
+// import { renderBillboard } from "@/utils/screen/billboard.js";
 import { loadDrones } from "@/utils/screen/drones.js";
 import { loadDevices } from "@/utils/screen/devices.js";
 import * as Cesium from "cesium";
@@ -232,6 +232,9 @@ const currentNav = ref(0);
 
 // 添加 AI 对话框状态
 const showAiDialog = ref(false);
+
+// AI对话框相关
+const aiAssistantRef = ref(null);
 
 // 修改导航点击处理函数
 const handleNavClick = (type) => {
@@ -392,7 +395,7 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .screen-container {
   width: 100%;
   height: 100vh;
@@ -648,5 +651,15 @@ onMounted(() => {
     rgba(0, 24, 75, 0.8),
     rgba(0, 38, 89, 0.8)
   );
+}
+
+/* 移除重复的 AI 助手样式 */
+.ai-assistant-overlay,
+.ai-assistant-wrapper,
+.ai-assistant-container,
+.ai-assistant-header,
+.ai-assistant-title,
+.ai-assistant-content {
+  display: none;
 }
 </style>

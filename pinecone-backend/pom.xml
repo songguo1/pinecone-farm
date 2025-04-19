@@ -115,6 +115,11 @@
                 <artifactId>farm-devices</artifactId>
                 <version>${farm.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.farm</groupId>
+                <artifactId>farm-data</artifactId>
+                <version>${farm.version}</version>
+            </dependency>
 
             <!-- 阿里数据库连接池 -->
             <dependency>
@@ -247,6 +252,9 @@
         <module>farm-manage</module>
         <module>farm_drones</module>
         <module>farm-devices</module>
+        <module>farm-data</module>
+
+        <module>farm-data</module>
     </modules>
     <packaging>pom</packaging>
 

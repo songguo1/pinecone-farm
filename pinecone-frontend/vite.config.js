@@ -43,6 +43,16 @@ export default defineConfig(({ mode, command }) => {
           changeOrigin: true,
           rewrite: (p) => p.replace(/^\/dev-ragflow/, ""),
         },
+        // 添加阿里云OSS代理
+        "/api/proxy/oss": {
+          target: "https://beson-bucket.oss-cn-beijing.aliyuncs.com",
+          changeOrigin: true,
+          rewrite: (p) => p.replace(/^\/api\/proxy\/oss/, ""),
+          headers: {
+            Referer: "https://beson-bucket.oss-cn-beijing.aliyuncs.com",
+            Origin: "https://beson-bucket.oss-cn-beijing.aliyuncs.com",
+          },
+        },
       },
     },
     //fix:error:stdin>:7356:1: warning: "@charset" must be the first rule in the file

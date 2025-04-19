@@ -13,7 +13,7 @@ export const initViewer = async () => {
     vrButton: false,
     infoBox: false,
     //如果不设置添加的模型实体动画不显示
-    shouldAnimate: true,//控制视图是否在动画中，用于启用或禁用视图动画
+    shouldAnimate: true, //控制视图是否在动画中，用于启用或禁用视图动画
     // terrainProvider: await Cesium.createWorldTerrainAsync({
     //   requestWaterMask: true,
     // }),
@@ -21,8 +21,8 @@ export const initViewer = async () => {
   (viewer.cesiumWidget.creditContainer as HTMLElement).style.display = "none";
   // 是否支持图像渲染像素化处理
 
-
   viewer.resolutionScale = window.devicePixelRatio;
+
 
   // 开启抗锯齿
   (viewer.scene as any).fxaa = true;

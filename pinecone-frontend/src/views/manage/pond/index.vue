@@ -107,7 +107,6 @@
       @selection-change="handleSelectionChange"
     >
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="ID" align="center" prop="pondId" />
       <el-table-column label="鱼塘名称" align="center" prop="pondName" />
       <el-table-column label="平均水深" align="center" prop="waterDepth" />
       <el-table-column label="水质等级" align="center" prop="waterQuality">
@@ -152,7 +151,6 @@
             v-hasPermi="['manage:pond:remove']"
             >删除</el-button
           >
-
         </template>
       </el-table-column>
     </el-table>
@@ -221,7 +219,11 @@
       append-to-body
     >
       <div class="view-dialog-content">
-        <Map-view :Id="selectedPondId" type="pond"></Map-view>
+        <Map-view
+          v-if="viewDialogVisible"
+          :Id="selectedPondId"
+          type="pond"
+        ></Map-view>
       </div>
     </el-dialog>
   </div>

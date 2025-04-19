@@ -8,7 +8,7 @@
             <el-icon class="card-panel-icon"><Monitor /></el-icon>
             <div class="card-panel-description">
               <div class="card-panel-text">设备总数</div>
-              <div class="card-panel-num">128台</div>
+              <div class="card-panel-num">18台</div>
             </div>
           </div>
         </el-card>

@@ -121,7 +121,6 @@
       @selection-change="handleSelectionChange"
     >
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="ID" align="center" prop="landId" />
       <el-table-column label="农田名称" align="center" prop="landName" />
       <el-table-column label="土壤类型" align="center" prop="soilType">
         <template #default="{ row }">
@@ -129,9 +128,6 @@
         </template>
       </el-table-column>
       <el-table-column label="种植作物种类" align="center" prop="cropsType">
-        <template #default="{ row }">
-          <dict-tag :options="crops_type" :value="row.cropsType" />
-        </template>
       </el-table-column>
       <el-table-column label="灌溉方式" align="center" prop="irrigationType">
         <template #default="{ row }">
@@ -241,7 +237,11 @@
       append-to-body
     >
       <div class="view-dialog-content">
-        <Map-view :Id="selectedFarmlandId" type="farmland"></Map-view>
+        <Map-view
+          v-if="viewDialogVisible"
+          :Id="selectedFarmlandId"
+          type="farmland"
+        ></Map-view>
       </div>
     </el-dialog>
   </div>
@@ -256,6 +256,7 @@ import {
   addFarmland,
   updateFarmland,
 } from "@/api/manage/farmland";
+
 import {
   Search,
   Refresh,
@@ -446,12 +447,18 @@ onMounted(() => {
 <style scoped>
 .view-dialog-content {
   width: 100%;
-  height: 500px; /* 设置一个固定高度 */
+  height: 600px;
+  position: relative;
 }
 
 /* 确保弹窗内容区域也具有足够的高度 */
 :deep(.el-dialog__body) {
   height: 600px;
   padding: 20px;
+  overflow: hidden;
+}
+
+:deep(.el-dialog) {
+  margin-top: 5vh !important;
 }
 </style>

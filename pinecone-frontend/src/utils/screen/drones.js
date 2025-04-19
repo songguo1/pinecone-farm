@@ -57,10 +57,13 @@ export const loadDrones = async (viewer) => {
   );
   viewer.clock.startTime = startTime.clone();
   viewer.clock.stopTime = stopTime.clone();
-  viewer.clock.multiplier = 5;
+  // 设置时间倍率
+  viewer.clock.multiplier = 6;
   viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
   //将视图设置为提供的时间
   viewer.timeline.zoomTo(startTime, stopTime);
+  viewer.timeline.container.style.visibility = "hidden";
+
   //点位数组
   for (let i = 0; i < dronesPathList.value.length; i++) {
     const dataPoint = dronesPathList.value[i].coordinates;

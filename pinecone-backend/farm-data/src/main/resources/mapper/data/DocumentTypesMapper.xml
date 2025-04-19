@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.farm.data.mapper.DocumentTypesMapper">
+    
+    <resultMap type="DocumentTypes" id="DocumentTypesResult">
+        <result property="documentTypeId"    column="document_type_id"    />
+        <result property="documentTypeName"    column="document_type_name"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="updateBy"    column="update_by"    />
+    </resultMap>
+
+    <sql id="selectDocumentTypesVo">
+        select document_type_id, document_type_name, create_time, update_time, create_by, update_by from agri_document_types
+    </sql>
+
+    <select id="selectDocumentTypesList" parameterType="DocumentTypes" resultMap="DocumentTypesResult">
+        <include refid="selectDocumentTypesVo"/>
+        <where>  
+            <if test="documentTypeId != null "> and document_type_id = #{documentTypeId}</if>
+            <if test="documentTypeName != null  and documentTypeName != ''"> and document_type_name like concat('%', #{documentTypeName}, '%')</if>
+        </where>
+    </select>
+    
+    <select id="selectDocumentTypesByDocumentTypeId" parameterType="Long" resultMap="DocumentTypesResult">
+        <include refid="selectDocumentTypesVo"/>
+        where document_type_id = #{documentTypeId}
+    </select>
+
+    <insert id="insertDocumentTypes" parameterType="DocumentTypes" useGeneratedKeys="true" keyProperty="documentTypeId">
+        insert into agri_document_types
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="documentTypeName != null and documentTypeName != ''">document_type_name,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="updateBy != null">update_by,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="documentTypeName != null and documentTypeName != ''">#{documentTypeName},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDocumentTypes" parameterType="DocumentTypes">
+        update agri_document_types
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="documentTypeName != null and documentTypeName != ''">document_type_name = #{documentTypeName},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+        </trim>
+        where document_type_id = #{documentTypeId}
+    </update>
+
+    <delete id="deleteDocumentTypesByDocumentTypeId" parameterType="Long">
+        delete from agri_document_types where document_type_id = #{documentTypeId}
+    </delete>
+
+    <delete id="deleteDocumentTypesByDocumentTypeIds" parameterType="String">
+        delete from agri_document_types where document_type_id in 
+        <foreach item="documentTypeId" collection="array" open="(" separator="," close=")">
+            #{documentTypeId}
+        </foreach>
+    </delete>
+</mapper>

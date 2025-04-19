@@ -1,9 +1,13 @@
 package com.farm.web.controller.common;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.dromara.x.file.storage.core.FileInfo;
+import org.dromara.x.file.storage.core.FileStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +38,9 @@ public class CommonController
 
     @Autowired
     private ServerConfig serverConfig;
+
+    @Autowired
+    private FileStorageService fileStorageService;//注入实列
 
     private static final String FILE_DELIMETER = ",";
 
@@ -77,16 +84,15 @@ public class CommonController
     {
         try
         {
-            // 上传文件路径
-            String filePath = RuoYiConfig.getUploadPath();
-            // 上传并返回新文件名称
-            String fileName = FileUploadUtils.upload(filePath, file);
-            String url = serverConfig.getUrl() + fileName;
+            String objectName= LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))+"/";
+            FileInfo fileInfo = fileStorageService.of(file)
+                    .setPath(objectName) //保存到相对路径下，为了方便管理，不需要可以不写
+                    .upload();  //将文件上传到对应地方
             AjaxResult ajax = AjaxResult.success();
-            ajax.put("url", url);
-            ajax.put("fileName", fileName);
-            ajax.put("newFileName", FileUtils.getName(fileName));
-            ajax.put("originalFilename", file.getOriginalFilename());
+            ajax.put("url", fileInfo.getUrl());
+            ajax.put("fileName", fileInfo.getUrl());
+            ajax.put("newFileName", fileInfo.getUrl());
+            ajax.put("originalFilename", fileInfo.getOriginalFilename());
             return ajax;
         }
         catch (Exception e)

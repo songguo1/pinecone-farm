@@ -70,8 +70,11 @@ export function handleStreamResponse(response, onData, onError, onComplete) {
 
 // 创建chat assistant会话
 export function createChatSession(data) {
+  const chatId = data.chat_id || import.meta.env.VITE_CHAT_ID;
+  delete data.chat_id; // 从请求数据中移除chat_id，避免发送到服务器
+
   return request({
-    url: `/api/v1/chats/${import.meta.env.VITE_CHAT_ID}/sessions`,
+    url: `/api/v1/chats/${chatId}/sessions`,
     method: "post",
     data: data,
   });
@@ -79,8 +82,11 @@ export function createChatSession(data) {
 
 // 获取chat assistant列表
 export function converseWithChat(data) {
+  const chatId = data.chat_id || import.meta.env.VITE_CHAT_ID;
+  delete data.chat_id; // 从请求数据中移除chat_id，避免发送到服务器
+
   return request({
-    url: `/api/v1/chats/${import.meta.env.VITE_CHAT_ID}/completions`,
+    url: `/api/v1/chats/${chatId}/completions`,
     method: "post",
     data: data,
   });

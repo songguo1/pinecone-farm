@@ -137,7 +137,6 @@
       @selection-change="handleSelectionChange"
     >
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="ID" align="center" prop="id" />
       <el-table-column label="任务名称" align="center" prop="taskName" />
       <el-table-column label="任务类型" align="center" prop="taskType">
         <template #default="{ row }">
@@ -154,8 +153,16 @@
           <span>{{ parseTime(row.taskDate, "{y}-{m}-{d}") }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="关联无人机表的ID" align="center" prop="droneId" />
-      <el-table-column label="关联飞手表的ID" align="center" prop="pilotId" />
+      <el-table-column label="关联无人机" align="center" prop="droneId">
+        <template #default="{ row }">
+          <span>{{ droneNames[row.droneId] || "" }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="关联飞手" align="center" prop="pilotId">
+        <template #default="{ row }">
+          <span>{{ pilotNames[row.pilotId] || "" }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="飞行高度" align="center" prop="dronesHeight" />
       <el-table-column
         label="操作"
@@ -219,14 +226,29 @@
           >
           </el-date-picker>
         </el-form-item>
-        <el-form-item label="关联无人机表的ID" prop="droneId">
-          <el-input
+        <el-form-item label="关联无人机" prop="droneId">
+          <el-select
             v-model="form.droneId"
-            placeholder="请输入关联无人机表的ID"
-          />
+            placeholder="请选择无人机"
+            clearable
+          >
+            <el-option
+              v-for="item in dronesList"
+              :key="item.id"
+              :label="item.droneModel"
+              :value="item.id"
+            />
+          </el-select>
         </el-form-item>
-        <el-form-item label="关联飞手表的ID" prop="pilotId">
-          <el-input v-model="form.pilotId" placeholder="请输入关联飞手表的ID" />
+        <el-form-item label="关联飞手" prop="pilotId">
+          <el-select v-model="form.pilotId" placeholder="请选择飞手" clearable>
+            <el-option
+              v-for="item in pilotsList"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="飞行高度" prop="dronesHeight">
           <el-input v-model="form.dronesHeight" placeholder="请输入飞行高度" />
@@ -251,8 +273,11 @@ import {
   delTask,
   addTask,
   updateTask,
+  getAllTasks,
 } from "@/api/drones/task";
 import { getCurrentInstance } from "vue";
+import { getDrones, getAllDrones } from "@/api/drones/drones";
+import { getPilots, getAllPilots } from "@/api/drones/pilots";
 
 const { proxy } = getCurrentInstance();
 // 字典数据
@@ -298,6 +323,12 @@ const queryFormRef = ref(null);
 const formRef = ref(null);
 const router = useRouter();
 
+const dronesList = ref([]);
+const pilotsList = ref([]);
+
+const droneNames = ref({});
+const pilotNames = ref({});
+
 /** 查询无人机任务列表 */
 const getList = async () => {
   loading.value = true;
@@ -305,6 +336,11 @@ const getList = async () => {
     const response = await listTask(queryParams);
     taskList.value = response.rows;
     total.value = response.total;
+    // 获取所有无人机和飞手名称
+    for (const task of taskList.value) {
+      if (task.droneId) await getDroneName(task.droneId);
+      if (task.pilotId) await getPilotName(task.pilotId);
+    }
   } finally {
     loading.value = false;
   }
@@ -363,14 +399,23 @@ const handleAdd = () => {
 /** 修改按钮操作 */
 const handleUpdate = async (row) => {
   reset();
-  const id = row.id || ids.value;
+  const id = row.id || ids.value[0];
   try {
+    // 获取任务数据
     const response = await getTask(id);
     form.value = response.data;
+    // 获取无人机和飞手列表
+    const [dronesRes, pilotsRes] = await Promise.all([
+      getAllDrones(),
+      getAllPilots(),
+    ]);
+    dronesList.value = dronesRes.rows;
+    pilotsList.value = pilotsRes.rows;
     open.value = true;
     title.value = "修改无人机任务";
   } catch (error) {
     console.error(error);
+    proxy.$modal.msgError("获取数据失败");
   }
 };
 
@@ -416,6 +461,32 @@ const handleExport = () => {
     },
     `task_${new Date().getTime()}.xlsx`
   );
+};
+
+// 获取无人机名称
+const getDroneName = async (id) => {
+  if (!id) return "";
+  try {
+    const droneRes = await getDrones(id);
+    droneNames.value[id] = droneRes.data.droneModel;
+    return droneRes.data.droneModel;
+  } catch (error) {
+    console.error("获取无人机信息失败:", error);
+    return "";
+  }
+};
+
+// 获取飞手名称
+const getPilotName = async (id) => {
+  if (!id) return "";
+  try {
+    const pilotRes = await getPilots(id);
+    pilotNames.value[id] = pilotRes.data.name;
+    return pilotRes.data.name;
+  } catch (error) {
+    console.error("获取飞手信息失败:", error);
+    return "";
+  }
 };
 
 onMounted(() => {

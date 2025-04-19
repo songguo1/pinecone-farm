@@ -128,7 +128,7 @@ const data = reactive({
     ],
     remarks: [
       { required: true, message: "请输入备注信息", trigger: "blur" },
-      { min: 5, max: 200, message: "长度在 5 到 200 个字符", trigger: "blur" },
+      { min: 0, max: 200, message: "长度不超过 200 个字符", trigger: "blur" },
     ],
     lastUpdate: [
       {
